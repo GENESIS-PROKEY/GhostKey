@@ -37,13 +37,11 @@ It generates **deterministic, repeatable, and shareable passwords** based on you
 
 ## 📂 Project Structure
 
-GhostKey/
-├── index.html # Main app
-├── styles.css # Custom neon/glassmorphism styling
-├── sw.js # Service Worker for caching
-├── assets/ # Icons, profile image, favicon
-└── manifest.webmanifest (optional for PWA)
-
+- **`index.html`** – Main application file.
+- **`styles.css`** – Custom styling using neon/glassmorphism effects.
+- **`sw.js`** – Service Worker for caching and offline support.
+- **`assets/`** – Folder containing icons, profile images, favicon, and other media.
+- **`manifest.webmanifest`** - Manifest file for making the app a Progressive Web App (PWA).
 
 ---
 
