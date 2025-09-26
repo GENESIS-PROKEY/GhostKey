@@ -76,7 +76,7 @@ It generates **deterministic, repeatable, and shareable passwords** based on you
 
 ## 📜 License
 
-MIT License © 2025 [Genesis Prokey](https://github.com/GENESIS-PROKEY)
+MIT License © 2025 [Genesis Prokey](https://github.com/GENESIS-PROKEY/GhostKey?tab=License-1-ov-file)
 
 ---
 
