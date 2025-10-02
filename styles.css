@@ -229,7 +229,7 @@ body::after {
   );
 }
 
-/* Cursor-reactive glow using CSS variables set by JS */
+/*reactive glow using CSS variables set by JS */
 .interactive-radius { position: relative; isolation: isolate; }
 .interactive-radius::after {
   content: "";
@@ -368,6 +368,21 @@ body::after {
 }
 .hidden { display: none !important; }
 
+/* Output section for long passwords */
+#outputSection {
+  max-height: 200px;
+  overflow-y: auto;
+  word-break: break-all;
+}
+#outputText {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+
 /* Themed range slider (length meter) */
 input[type="range"] {
   -webkit-appearance: none;
@@ -475,5 +490,6 @@ body::before {
   .fade-in, .scale-in, .slide-in, .pulse { animation: none !important; }
   .hover-scale, .btn-neon, .tilt-3d, .interactive-radius::after { transition: none !important; }
 }
+
 
 
