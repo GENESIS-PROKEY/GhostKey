@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GhostKey</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="shortcut icon" href="assets/favicon.ico">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b1020">
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+  <canvas id="matrixCanvas"></canvas>
+  <button id="matrixToggleBtn" class="fixed top-2 right-2 z-20 btn-neon rounded-full hover-scale tilt-3d interactive-radius w-10 h-10 grid place-items-center text-white text-base font-semibold" aria-pressed="false" aria-label="Toggle matrix background" title="Toggle Matrix">雨</button>
+  <div id="helpContainer" class="fixed top-2 left-2 z-30">
+    <button id="helpBtn" class="btn-neon rounded-full hover-scale tilt-3d interactive-radius w-10 h-10 grid place-items-center text-white text-base font-semibold" aria-label="Help and usage" aria-describedby="helpTooltip">?</button>
+    <div id="helpTooltip" role="tooltip" class="help-tooltip hidden" tabindex="-1">
+      <h3 class="help-title">GhostKey — Quick Guide</h3>
+      <p class="help-note">Your phrase. Invisible, repeatable.</p>
+      <ul class="help-list">
+        <li><strong>What it is:</strong> Deterministic obfuscation for creating consistent, shareable passwords.</li>
+        <li><strong>How to use:</strong> Tap <em>Encrypt</em>, enter 8–20 chars, then <em>Create</em>.</li>
+        <li><strong>Copy:</strong> Use <em>Copy</em> to place the result on your clipboard.</li>
+        <li><strong>URL-safe mode:</strong> Toggle to limit symbols to URL-friendly ones. Great for links and services that restrict characters.</li>
+        <li><strong>Privacy:</strong> No data is stored. All processing happens locally.</li>
+      </ul>
+      <p class="help-note">Tip: The same input always produces the same output. Keep your original safe.</p>
+    </div>
+  </div>
+  <div id="app" class="w-full max-w-3xl mx-auto">
+  <div class="fade-in text-center">
+    <div class="w-32 h-32 rounded-full border-4 border-indigo-500 mb-4 mx-auto avatar-glow avatar-frame">
+      <img src="assets/Profile.png" alt="GhostKey" width="120" height="135" loading="eager" decoding="async" class="avatar-crop" />
+    </div>
+    <h1 class="title font-bold mb-2">GhostKey</h1>
+    <p class="text-lg font-semibold text-indigo-300 mb-4">Developed by Genesis Prokey</p>
+    <div class="flex justify-center space-x-4 mb-6">
+      <a href="https://www.linkedin.com/in/pritam-banik-7979a0364/" target="_blank" rel="noopener noreferrer" class="link-neon hover-scale transition tilt-3d interactive-radius">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg" alt="LinkedIn" class="social-icon" />
+      </a>
+      <a href="https://x.com/Pritamb95825181" target="_blank" rel="noopener noreferrer" class="link-neon hover-scale transition tilt-3d interactive-radius">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/x.svg" alt="Twitter" class="social-icon" />
+      </a>
+      <a href="https://github.com/GENESIS-PROKEY" target="_blank" rel="noopener noreferrer" class="link-neon hover-scale transition tilt-3d interactive-radius">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/github.svg" alt="GitHub" class="social-icon" />
+      </a>
+    </div>
+  </div>
+  <div class="w-full max-w-md glass-card p-6 tilt-3d interactive-radius mx-auto">
+    <button id="encryptBtn" class="w-full btn-neon text-white font-semibold py-3 px-4 rounded-lg hover-scale tilt-3d interactive-radius">
+      Encrypt
+    </button>
+    <div id="encryptionTab" class="mt-6 p-4 surface-muted rounded-lg hidden slide-in">
+      <h2 class="text-xl font-semibold text-emerald-400 mb-4">Generate Secure Password</h2>
+      <p class="text-emerald-300 font-medium text-sm mb-4 p-3 surface-muted rounded-lg shadow-sm scale-in">🔑 Please provide a unique name combined with a symbol or number to create a secure password (e.g., 123456789 ,Password123 , admin@123) </p>
+      <div class="mb-4">
+        <div class="flex items-center gap-2">
+          <input
+            id="inputText"
+            type="password"
+            placeholder="Enter your password — Your phrase. Invisible, repeatable."
+            maxlength="20"
+            class="flex-1 min-w-0 p-2 border border-indigo-500/40 bg-transparent placeholder:text-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm text-slate-100 input-neon"
+            aria-label="Enter your password phrase"
+            aria-describedby="strengthIndicator lengthCounter"
+          />
+          <button id="toggleVisibility" type="button" class="px-3 py-2 text-xs rounded-lg surface-muted hover-scale shrink-0" aria-label="Toggle password visibility">Show</button>
+        </div>
+        <!-- Password strength indicator -->
+        <div id="strengthIndicator" class="mt-2" role="progressbar" aria-label="Password strength" aria-valuemin="0" aria-valuemax="4">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400">Strength:</span>
+            <div class="flex gap-1">
+              <div class="strength-bar" data-level="1"></div>
+              <div class="strength-bar" data-level="2"></div>
+              <div class="strength-bar" data-level="3"></div>
+              <div class="strength-bar" data-level="4"></div>
+            </div>
+            <span id="strengthText" class="text-xs font-medium">Enter password</span>
+          </div>
+          <div class="mt-1 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Estimated time to crack:</span>
+            <span id="inputCrackTime" class="text-xs font-semibold text-slate-400">Enter password</span>
+          </div>
+        </div>
+        <div class="w-full flex items-center justify-between mt-2">
+          <label class="switch text-sm text-emerald-300 font-semibold">
+            <input id="urlSafeToggle" type="checkbox" aria-label="Toggle URL safe mode">
+            <span class="switch-track"></span>
+            <span class="ml-2">URL-safe mode</span>
+          </label>
+          <span id="lengthCounter" class="text-sm text-indigo-200 whitespace-nowrap">0/20</span>
+        </div>
+
+        <!-- Output length control -->
+        <div class="w-full mt-3 p-2 surface-muted rounded-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-indigo-200">Output length</span>
+            <span id="lengthValue" class="text-sm font-semibold text-emerald-300">20</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="lengthDec" type="button" class="px-2 py-1 text-xs rounded-md surface-muted hover-scale">−</button>
+            <input id="lengthRange" type="range" min="8" max="128" step="1" value="20" class="flex-1" aria-label="Output length slider">
+            <button id="lengthInc" type="button" class="px-2 py-1 text-xs rounded-md surface-muted hover-scale">+</button>
+          </div>
+        </div>
+      </div>
+      <button id="generateBtn" class="w-full btn-neon text-white font-semibold py-2 px-4 rounded-lg hover-scale tilt-3d interactive-radius" aria-label="Generate encrypted password">
+        <span id="generateText">Create</span>
+        <div id="loadingSpinner" class="hidden">
+          <div class="spinner"></div>
+          <span class="ml-2">Generating...</span>
+        </div>
+      </button>
+      
+      <!-- Generation process animation -->
+      <div id="generationProcess" class="hidden mt-4 p-3 surface-muted rounded-lg">
+        <h3 class="text-sm font-semibold text-emerald-400 mb-2">Generation Process:</h3>
+        <div class="space-y-1">
+          <div class="process-step" data-step="1">Layer 1: Caesar cipher...</div>
+          <div class="process-step" data-step="2">Layer 2: Uppercase substitution...</div>
+          <div class="process-step" data-step="3">Layer 3: Code character append...</div>
+          <div class="process-step" data-step="4">Layer 4: Additional code character...</div>
+          <div class="process-step" data-step="5">Layer 5: Word token insertion...</div>
+          <div class="process-step" data-step="6">Layer 6: Number insertion...</div>
+          <div class="process-step" data-step="7">Layer 7: Symbol insertion...</div>
+          <div class="process-step" data-step="8">Layer 8: String reversal...</div>
+          <div class="process-step" data-step="9">Layer 9: Lowercase insertion...</div>
+          <div class="process-step" data-step="10">Layer 10: Final permutation...</div>
+        </div>
+      </div>
+      <div id="outputSection" class="mt-4 p-4 surface-muted rounded-lg hidden">
+        <p class="text-indigo-300 font-medium text-sm"><strong>Encrypted Password:</strong> <span id="outputText">[Encrypted output here]</span></p>
+        
+        <!-- Generated Password Strength Analysis -->
+        <div id="generatedStrengthAnalysis" class="mt-3 p-3 surface-muted rounded-lg border border-emerald-500/20">
+          <h4 class="text-sm font-semibold text-emerald-400 mb-2">Generated Password Analysis:</h4>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-400">Password strength:</span>
+              <span id="generatedStrengthLevel" class="text-xs font-semibold">Analyzing...</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-400">Estimated time to crack:</span>
+              <span id="crackTime" class="text-xs font-semibold text-emerald-300">Calculating...</span>
+            </div>
+          </div>
+        </div>
+        
+        <button id="copyBtn" class="mt-2 btn-neon text-white font-semibold py-1 px-3 rounded-lg hover-scale tilt-3d interactive-radius">
+          Copy
+        </button>
+      </div>
+      <p class="text-red-400 font-medium italic text-sm mt-4 p-3 surface-muted border border-red-500/20 rounded-lg scale-in text-center">🔒 You need not remember the encrypted password; remember the original, and we will provide the encrypted format.</p>
+    </div>
+  </div>
+  <footer class="mt-10 text-center interactive-radius tilt-3d">
+    <p class="text-sm text-indigo-300/80 mb-2">© 2025 GhostKey by Genesis Prokey. All rights reserved.</p>
+    <p class="text-red-400 font-semibold text-sm">⚠️ Your data is not stored. Privacy respected.</p>
+    <p class="text-xs text-indigo-300/70 mt-2">Note: This tool performs deterministic obfuscation, not cryptographic encryption. Do not use for storing sensitive secrets.</p>
+  </footer>
+  </div>
+
+  <script>
+    // (cleaned) No avatar fallbacks needed; using single path in HTML
+
+    // Deterministic hash function for consistent transformations
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash * 31 + str.charCodeAt(i)) % 1000000;
+      }
+      return hash;
+    }
+
+    // Show encryption tab with animation
+    document.getElementById('encryptBtn').addEventListener('click', () => {
+      const tab = document.getElementById('encryptionTab');
+      tab.classList.remove('hidden');
+      tab.classList.add('slide-in');
+      // Ensure the card stays centered when expanded
+      const card = tab.closest('.glass-card');
+      if (card) {
+        card.classList.add('mx-auto');
+      }
+      // update length counter and enforce max length
+      const input = document.getElementById('inputText');
+      const counter = document.getElementById('lengthCounter');
+      const toggle = document.getElementById('toggleVisibility');
+      if (input && counter) {
+        counter.textContent = `${input.value.length}/20`;
+        input.addEventListener('input', () => {
+          if (input.value.length > 20) input.value = input.value.slice(0, 20);
+          counter.textContent = `${input.value.length}/20`;
+          updatePasswordStrength(input.value);
+        });
+        // Initial strength check
+        updatePasswordStrength(input.value);
+      }
+      if (toggle && input) {
+        toggle.onclick = () => {
+          const isPwd = input.type === 'password';
+          input.type = isPwd ? 'text' : 'password';
+          toggle.textContent = isPwd ? 'Hide' : 'Show';
+        };
+      }
+
+      // Length UI wiring
+      const lengthRange = document.getElementById('lengthRange');
+      const lengthValue = document.getElementById('lengthValue');
+      const lengthInc = document.getElementById('lengthInc');
+      const lengthDec = document.getElementById('lengthDec');
+      if (lengthRange && lengthValue && lengthInc && lengthDec) {
+        const clampLen = (n) => Math.max(8, Math.min(128, Math.round(Number(n) || 20)));
+        function setLen(n) {
+          const v = clampLen(n);
+          lengthRange.value = String(v);
+          lengthValue.textContent = String(v);
+          const min = Number(lengthRange.min || 8);
+          const max = Number(lengthRange.max || 128);
+          const pct = ((v - min) * 100) / (max - min);
+          lengthRange.style.setProperty('--range-pct', pct + '%');
+        }
+        setLen(lengthRange.value);
+        lengthRange.addEventListener('input', () => setLen(lengthRange.value));
+        lengthInc.addEventListener('click', () => setLen(Number(lengthRange.value) + 1));
+        lengthDec.addEventListener('click', () => setLen(Number(lengthRange.value) - 1));
+      }
+    });
+
+    // Enhanced password strength calculation (inspired by zxcvbn)
+    function updatePasswordStrength(password) {
+      const strengthBars = document.querySelectorAll('.strength-bar');
+      const strengthText = document.getElementById('strengthText');
+      const strengthIndicator = document.getElementById('strengthIndicator');
+      const inputCrackTime = document.getElementById('inputCrackTime');
+      
+      if (!password) {
+        strengthBars.forEach(bar => bar.className = 'strength-bar');
+        strengthText.textContent = 'Enter password';
+        inputCrackTime.textContent = 'Enter password';
+        strengthIndicator.setAttribute('aria-valuenow', '0');
+        return;
+      }
+      
+      // Calculate password strength using zxcvbn-like algorithm
+      const analysis = analyzePasswordStrength(password);
+      
+      // Update visual indicators
+      strengthBars.forEach((bar, index) => {
+        bar.className = 'strength-bar';
+        if (index < analysis.score) {
+          if (analysis.score <= 1) bar.classList.add('weak');
+          else if (analysis.score <= 2) bar.classList.add('fair');
+          else if (analysis.score <= 3) bar.classList.add('good');
+          else bar.classList.add('strong');
+        }
+      });
+      
+      // Update text and ARIA
+      strengthText.textContent = analysis.strength;
+      strengthIndicator.setAttribute('aria-valuenow', analysis.score);
+      inputCrackTime.textContent = analysis.crackTime;
+    }
+
+    // Password strength analysis function (zxcvbn-inspired)
+    function analyzePasswordStrength(password) {
+      if (!password) return { score: 0, strength: 'Enter password', crackTime: 'Enter password' };
+      
+      let score = 0;
+      let entropy = 0;
+      
+      // Check for common patterns and weaknesses
+      const commonPasswords = ['password', '123456', 'qwerty', 'abc123', 'password123', 'admin', 'letmein'];
+      const isCommon = commonPasswords.some(common => password.toLowerCase().includes(common));
+      
+      // Length scoring
+      if (password.length < 6) {
+        score = 0;
+        entropy = Math.log2(Math.pow(26, password.length));
+      } else if (password.length < 8) {
+        score = 1;
+        entropy = Math.log2(Math.pow(26, password.length));
+      } else if (password.length < 12) {
+        score = 2;
+        entropy = Math.log2(Math.pow(26, password.length));
+      } else if (password.length < 16) {
+        score = 3;
+        entropy = Math.log2(Math.pow(26, password.length));
+      } else {
+        score = 4;
+        entropy = Math.log2(Math.pow(26, password.length));
+      }
+      
+      // Character variety bonus
+      const hasLower = /[a-z]/.test(password);
+      const hasUpper = /[A-Z]/.test(password);
+      const hasNumbers = /[0-9]/.test(password);
+      const hasSymbols = /[^a-zA-Z0-9]/.test(password);
+      
+      let charsetSize = 0;
+      if (hasLower) charsetSize += 26;
+      if (hasUpper) charsetSize += 26;
+      if (hasNumbers) charsetSize += 10;
+      if (hasSymbols) charsetSize += 32;
+      
+      if (charsetSize > 26) {
+        entropy = Math.log2(Math.pow(charsetSize, password.length));
+        if (charsetSize >= 94) score = Math.min(score + 1, 4);
+        else if (charsetSize >= 62) score = Math.min(score + 1, 4);
+      }
+      
+      // Penalty for common patterns
+      if (isCommon) {
+        score = Math.max(score - 2, 0);
+        entropy = Math.max(entropy - 10, 0);
+      }
+      
+      // Penalty for repeated characters
+      const repeatedChars = /(.)\1{2,}/.test(password);
+      if (repeatedChars) {
+        score = Math.max(score - 1, 0);
+        entropy = Math.max(entropy - 5, 0);
+      }
+      
+      // Penalty for sequential patterns
+      const sequential = /(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|123|234|345|456|567|678|789|890)/i.test(password);
+      if (sequential) {
+        score = Math.max(score - 1, 0);
+        entropy = Math.max(entropy - 5, 0);
+      }
+      
+      // Calculate crack time
+      const attemptsPerSecond = 1000000000; // 1 billion attempts per second
+      const totalCombinations = Math.pow(charsetSize || 26, password.length);
+      const secondsToCrack = totalCombinations / (2 * attemptsPerSecond);
+      
+      // Determine strength level and crack time
+      let strength, crackTime;
+      
+      if (score <= 1 || entropy < 20) {
+        strength = 'very weak';
+        crackTime = 'less than a second';
+      } else if (score <= 2 || entropy < 30) {
+        strength = 'weak';
+        if (secondsToCrack < 60) crackTime = 'less than a minute';
+        else if (secondsToCrack < 3600) crackTime = `${Math.round(secondsToCrack/60)} minutes`;
+        else if (secondsToCrack < 86400) crackTime = `${Math.round(secondsToCrack/3600)} hours`;
+        else crackTime = `${Math.round(secondsToCrack/86400)} days`;
+      } else if (score <= 3 || entropy < 50) {
+        strength = 'fair';
+        if (secondsToCrack < 31536000) crackTime = `${Math.round(secondsToCrack/86400)} days`;
+        else if (secondsToCrack < 3153600000) crackTime = `${Math.round(secondsToCrack/31536000)} years`;
+        else crackTime = 'centuries';
+      } else {
+        strength = 'strong';
+        if (secondsToCrack < 3153600000) crackTime = `${Math.round(secondsToCrack/31536000)} years`;
+        else crackTime = 'centuries';
+      }
+      
+      return { score, strength, crackTime };
+    }
+
+    // Advanced password strength analysis for generated passwords
+    function analyzeGeneratedPassword(password) {
+      const generatedStrengthLevel = document.getElementById('generatedStrengthLevel');
+      const crackTime = document.getElementById('crackTime');
+      
+      if (!password) return;
+      
+      // Use the same enhanced analysis for consistency
+      const analysis = analyzePasswordStrength(password);
+      
+      // Determine color class based on strength
+      let strengthClass;
+      switch (analysis.strength) {
+        case 'very weak':
+          strengthClass = 'text-red-400';
+          break;
+        case 'weak':
+          strengthClass = 'text-orange-400';
+          break;
+        case 'fair':
+          strengthClass = 'text-yellow-400';
+          break;
+        case 'strong':
+          strengthClass = 'text-emerald-400';
+          break;
+        default:
+          strengthClass = 'text-emerald-400';
+      }
+      
+      // Update UI
+      generatedStrengthLevel.textContent = analysis.strength;
+      generatedStrengthLevel.className = `text-xs font-semibold ${strengthClass}`;
+      crackTime.textContent = analysis.crackTime;
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+Enter to generate
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        const generateBtn = document.getElementById('generateBtn');
+        if (generateBtn && !generateBtn.disabled) {
+          generateBtn.click();
+        }
+      }
+      
+      // Ctrl+C to copy (when output is visible)
+      if (e.ctrlKey && e.key === 'c') {
+        const outputSection = document.getElementById('outputSection');
+        const copyBtn = document.getElementById('copyBtn');
+        if (outputSection && !outputSection.classList.contains('hidden') && copyBtn) {
+          e.preventDefault();
+          copyBtn.click();
+        }
+      }
+    });
+
+    // Deterministic 10-layer encryption logic with animation
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const input = document.getElementById('inputText').value;
+      if (input.length < 8 || input.length > 20) {
+        showToast('Password must be 8–20 characters.');
+        return;
+      }
+      
+      // Show loading state
+      const generateBtn = document.getElementById('generateBtn');
+      const generateText = document.getElementById('generateText');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const generationProcess = document.getElementById('generationProcess');
+      const outputSection = document.getElementById('outputSection');
+      
+      generateBtn.disabled = true;
+      generateText.classList.add('hidden');
+      loadingSpinner.classList.remove('hidden');
+      generationProcess.classList.remove('hidden');
+      outputSection.classList.add('hidden');
+      
+      // Reset process steps
+      const processSteps = document.querySelectorAll('.process-step');
+      processSteps.forEach(step => {
+        step.classList.remove('active', 'completed');
+      });
+      
+      const targetLenEl = document.getElementById('lengthRange');
+      const targetLen = Math.max(8, Math.min(128, Number(targetLenEl ? targetLenEl.value : 20)));
+
+      // Character sets for encryption
+      const chars = {
+        engLower: 'abcdefghijklmnopqrstuvwxyz',
+        engUpper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        codes: 'pythonjavascriptjavacsharpcppgoRustRubyPHPKotlinSwiftTypeScriptDartScalaPerlHaskellElixirClojureErlangLuaSolidityRMatlabJuliaFortranCOBOLPascalShellBatchPowerShellSQLNoSQLHTMLCSSXMLYAMLJSON',
+        words: ['alpha','beta','gamma','delta','omega','cipher','matrix','quantum','neon','hacker','crypto','root','zero','trace','vector','signal','shadow','ghost','proxy','kernel'],
+        numbers: '0123456789',
+        symbols: " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~§©®™•…–—‚„“”‘’·±÷×¶ºª°€£¥₹₩₽₺₨₿¢¤¿¡¬µ◇◆★☆✦✧✩✪✫✬✭✮✯✰✓✔✕✖✗♥♡❤❥∞≈≠≤≥√∆πµΩ←→↑↓↔↕↩↪⇧⇩◀▶▲▼◈◉◎◌○●◻◼◽◾□■△▲▽▼◁◀▷▶♠♣♦♤♧♢♪♫♭♯§✨",
+        urlSafeSymbols: "-_.~@"
+      };
+
+      let result = input;
+      const hash = simpleHash(input); // Deterministic seed based on input
+
+      // Helper function to animate process steps
+      async function animateStep(stepNumber) {
+        const step = document.querySelector(`[data-step="${stepNumber}"]`);
+        if (step) {
+          step.classList.add('active');
+          await new Promise(resolve => setTimeout(resolve, 200));
+          step.classList.remove('active');
+          step.classList.add('completed');
+        }
+      }
+
+      // Layer 1: Caesar cipher with fixed shift
+      await animateStep(1);
+      result = result.split('').map(c => String.fromCharCode(c.charCodeAt(0) + 3)).join('');
+
+      // Layer 2: Uppercase substitution based on hash
+      await animateStep(2);
+      result = result.split('').map((c, i) => (hash + i) % 3 === 0 ? chars.engUpper[(c.charCodeAt(0) + hash) % chars.engUpper.length] : c).join('');
+
+      // Layer 3: Append code-themed character based on hash
+      await animateStep(3);
+      result += chars.codes[hash % chars.codes.length];
+
+      // Layer 4: Append another code-themed character with offset
+      await animateStep(4);
+      result += chars.codes[(hash + 7) % chars.codes.length];
+
+      // Extra: Append a random word token from list (deterministic by hash)
+      await animateStep(5);
+      const word = chars.words[hash % chars.words.length];
+      result += '-' + word + '-';
+
+      // Layer 5: Insert number at fixed position based on hash
+      await animateStep(6);
+      result = result.slice(0, 5) + chars.numbers[hash % chars.numbers.length] + result.slice(5);
+
+      // Layer 6: Insert symbol at fixed position based on hash (URL-safe aware)
+      await animateStep(7);
+      const useUrlSafe = (document.getElementById('urlSafeToggle')?.checked) || false;
+      const symSet = useUrlSafe ? chars.urlSafeSymbols : chars.symbols;
+      result = result.slice(0, 8) + symSet[hash % symSet.length] + result.slice(8);
+
+      // Layer 7: Reverse string
+      await animateStep(8);
+      result = result.split('').reverse().join('');
+
+      // Layer 8: Insert lowercase based on hash
+      await animateStep(9);
+      result = result.split('').map((c, i) => (hash + i) % 4 === 0 ? c + chars.engLower[(hash + i) % chars.engLower.length] : c).join('');
+
+      // Layer 9: Deterministic permutation based on input length
+      await animateStep(10);
+      const len = result.length;
+      const perm = Array.from({ length: len }, (_, i) => (hash + i) % len);
+      result = perm.map(i => result[i]).join('');
+
+      // Layer 10: finalize to selected target length deterministically
+      const fillerAlphabet = chars.engLower + chars.engUpper + (useUrlSafe ? chars.urlSafeSymbols : chars.symbols) + chars.numbers;
+      function deterministicChar(idx) {
+        const h = (hash * 131 + idx * 997) >>> 0;
+        return fillerAlphabet[h % fillerAlphabet.length];
+      }
+      // Add a final symbol then pad/trim to targetLen
+      result = result + symSet[(hash + 2) % symSet.length];
+      if (result.length < targetLen) {
+        const need = targetLen - result.length;
+        let extra = '';
+        for (let i = 0; i < need; i++) extra += deterministicChar(i);
+        result += extra;
+      } else if (result.length > targetLen) {
+        const arr = result.split('');
+        const len2 = arr.length;
+        const order = Array.from({ length: len2 }, (_, i) => i).sort((a, b) => ((hash + a * 31) % len2) - ((hash + b * 31) % len2));
+        const picked = order.slice(0, targetLen).sort((a, b) => a - b).map(i => arr[i]).join('');
+        result = picked;
+      }
+
+      if (useUrlSafe) {
+        result = result.replace(/[^A-Za-z0-9\-_.~@]/g, '-');
+      }
+
+      // Hide loading state and show result
+      generateBtn.disabled = false;
+      generateText.classList.remove('hidden');
+      loadingSpinner.classList.add('hidden');
+      generationProcess.classList.add('hidden');
+      
+      document.getElementById('outputText').textContent = result;
+      outputSection.classList.remove('hidden');
+      outputSection.classList.add('pulse');
+      
+      // Analyze the generated password strength
+      analyzeGeneratedPassword(result);
+      
+      // Remove pulse animation after it completes to allow re-triggering
+      setTimeout(() => outputSection.classList.remove('pulse'), 300);
+      
+      // Announce completion to screen readers
+      const announcement = document.createElement('div');
+      announcement.setAttribute('aria-live', 'polite');
+      announcement.setAttribute('aria-atomic', 'true');
+      announcement.className = 'sr-only';
+      announcement.textContent = `Password generated successfully. Length: ${result.length} characters.`;
+      document.body.appendChild(announcement);
+      setTimeout(() => announcement.remove(), 1000);
+    });
+
+    // Utility: Toast
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.setAttribute('role', 'status');
+      toast.setAttribute('aria-live', 'polite');
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Copy to clipboard with toast
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const output = document.getElementById('outputText').textContent;
+      navigator.clipboard.writeText(output).then(() => {
+        showToast('Encrypted password copied!');
+      });
+    });
+
+    // Cursor-reactive glow and 3D tilt
+    (function() {
+      const radiusElements = document.querySelectorAll('.interactive-radius');
+      radiusElements.forEach((el) => {
+        el.addEventListener('mouseenter', () => el.style.setProperty('--glow-opacity', '1'));
+        el.addEventListener('mousemove', (e) => {
+          const rect = el.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          el.style.setProperty('--mx', x + '%');
+          el.style.setProperty('--my', y + '%');
+        });
+        el.addEventListener('mouseleave', () => el.style.setProperty('--glow-opacity', '0'));
+      });
+
+      const tiltElements = document.querySelectorAll('.tilt-3d');
+      const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
+      tiltElements.forEach((el) => {
+        const maxTilt = 8; // degrees
+        el.addEventListener('mousemove', (e) => {
+          const rect = el.getBoundingClientRect();
+          const px = (e.clientX - rect.left) / rect.width - 0.5;
+          const py = (e.clientY - rect.top) / rect.height - 0.5;
+          const rx = clamp(-py * maxTilt, -maxTilt, maxTilt);
+          const ry = clamp(px * maxTilt, -maxTilt, maxTilt);
+          el.style.transform = `perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg)';
+        });
+      });
+    })();
+
+    // Matrix Rain (toggleable)
+    (function() {
+      const canvas = document.getElementById('matrixCanvas');
+      const ctx = canvas.getContext('2d');
+      let animationId = null;
+      let columns = 0;
+      let drops = [];
+      let fontSizes = [];
+      let speeds = [];
+      const baseStep = 14; // horizontal spacing
+      const STORAGE_KEY = 'matrixEnabled';
+
+      function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(window.innerWidth * dpr);
+        canvas.height = Math.floor(window.innerHeight * dpr);
+        ctx.scale(dpr, dpr);
+        columns = Math.floor(window.innerWidth / baseStep);
+        drops = Array.from({ length: columns }, () => Math.random() * window.innerHeight);
+        fontSizes = Array.from({ length: columns }, () => 12 + Math.floor(Math.random() * 9)); // 12–20px
+        speeds = fontSizes.map(fs => 8 + Math.round((fs - 12) * 1.6)); // tie speed to size
+      }
+
+      function getMatrixChar() {
+        const r = Math.random();
+        if (r < 0.5) {
+          return Math.random() > 0.5 ? '1' : '0';
+        }
+        return String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96));
+      }
+
+      function draw() {
+        ctx.fillStyle = 'rgba(11, 16, 32, 0.15)';
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+        for (let i = 0; i < columns; i++) {
+          const text = getMatrixChar();
+          const x = i * baseStep;
+          const y = drops[i];
+          const fs = fontSizes[i] || 14;
+          const sp = speeds[i] || 18;
+
+          ctx.font = fs + 'px JetBrains Mono, monospace';
+
+          // occasional bright head glyph
+          const isHead = Math.random() < 0.3;
+          if (isHead) {
+            ctx.fillStyle = 'rgba(209, 250, 229, 0.95)'; // emerald-100
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = 'rgba(16, 185, 129, 0.85)';
+            ctx.fillText(text, x, y);
+            ctx.shadowBlur = 0;
+          } else {
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.85)';
+            ctx.fillText(text, x, y);
+          }
+
+          if (y > window.innerHeight + fs && Math.random() > 0.975) drops[i] = -Math.random() * 100;
+          drops[i] += sp;
+        }
+        animationId = requestAnimationFrame(draw);
+      }
+
+      function start() {
+        if (animationId) return;
+        canvas.style.display = 'block';
+        resize();
+        draw();
+        window.addEventListener('resize', resize);
+      }
+
+      function stop() {
+        if (!animationId) return;
+        cancelAnimationFrame(animationId);
+        animationId = null;
+        canvas.style.display = 'none';
+        window.removeEventListener('resize', resize);
+      }
+
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const toggleBtn = document.getElementById('matrixToggleBtn');
+
+      function applyState(shouldStart) {
+        if (shouldStart && !prefersReduced) {
+          toggleBtn.setAttribute('aria-pressed', 'true');
+          start();
+        } else {
+          toggleBtn.setAttribute('aria-pressed', 'false');
+          stop();
+        }
+      }
+
+      toggleBtn.addEventListener('click', () => {
+        const active = toggleBtn.getAttribute('aria-pressed') === 'true';
+        const next = !active;
+        applyState(next);
+        try { localStorage.setItem(STORAGE_KEY, String(next)); } catch (_) {}
+      });
+
+      // Initialize from saved preference, fallback to auto-start unless reduced motion
+      let saved = null;
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch (_) {}
+      if (saved === 'true') {
+        applyState(true);
+      } else if (saved === 'false') {
+        applyState(false);
+      } else {
+        applyState(!prefersReduced);
+      }
+    })();
+
+    // Register service worker for PWA (optional)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    // Help tooltip interactions (hover/focus and touch/hold)
+    (function() {
+      const container = document.getElementById('helpContainer');
+      const btn = document.getElementById('helpBtn');
+      const tip = document.getElementById('helpTooltip');
+      if (!container || !btn || !tip) return;
+
+      let touchActive = false;
+
+      function show() { tip.classList.remove('hidden'); }
+      function hide() { tip.classList.add('hidden'); }
+
+      // Mouse / keyboard
+      btn.addEventListener('mouseenter', show);
+      btn.addEventListener('mouseleave', hide);
+      btn.addEventListener('focus', show);
+      btn.addEventListener('blur', hide);
+      container.addEventListener('mouseleave', hide);
+
+      // Touch: press to show, release to hide
+      btn.addEventListener('touchstart', (e) => {
+        touchActive = true;
+        show();
+      }, { passive: true });
+      btn.addEventListener('touchend', () => {
+        touchActive = false;
+        hide();
+      });
+      btn.addEventListener('touchcancel', () => {
+        touchActive = false;
+        hide();
+      });
+
+      // If user taps outside, hide
+      document.addEventListener('touchstart', (e) => {
+        if (!touchActive) return;
+        if (!container.contains(e.target)) hide();
+      }, { passive: true });
+    })();
+  </script>
+</body>
+</html>
+
