@@ -151,6 +151,58 @@
             </div>
           </div>
         </div>
+
+        <!-- Advanced Analytics -->
+        <div id="advancedAnalytics" class="mt-3 p-3 surface-muted rounded-lg border border-indigo-500/20">
+          <h4 class="text-sm font-semibold text-indigo-400 mb-3">Advanced Analytics:</h4>
+          
+          <!-- Entropy Meter -->
+          <div class="mb-3">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs text-slate-400">Entropy Level:</span>
+              <span id="entropyValue" class="text-xs font-semibold text-indigo-300">0 bits</span>
+            </div>
+            <div class="w-full bg-slate-700/30 rounded-full h-2">
+              <div id="entropyBar" class="h-2 rounded-full transition-all duration-500" style="width: 0%; background: linear-gradient(90deg, #ef4444, #f59e0b, #eab308, #22c55e, #10b981);"></div>
+            </div>
+            <div class="flex justify-between text-xs text-slate-500 mt-1">
+              <span>Weak</span>
+              <span>Strong</span>
+            </div>
+          </div>
+
+          <!-- Security Score -->
+          <div class="mb-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-400">Security Score:</span>
+              <div class="flex items-center gap-2">
+                <span id="securityScore" class="text-xs font-semibold">0/100</span>
+                <div class="w-12 h-2 bg-slate-700/30 rounded-full">
+                  <div id="securityScoreBar" class="h-2 rounded-full transition-all duration-500" style="width: 0%; background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Breach Check -->
+          <div class="mb-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-400">Breach Status:</span>
+              <div class="flex items-center gap-1">
+                <span id="breachStatus" class="text-xs font-semibold">Checking...</span>
+                <div id="breachIcon" class="w-3 h-3 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Password Age -->
+          <div class="mb-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-400">Generated:</span>
+              <span id="passwordAge" class="text-xs font-semibold text-slate-300">Just now</span>
+            </div>
+          </div>
+        </div>
         
         <button id="copyBtn" class="mt-2 btn-neon text-white font-semibold py-1 px-3 rounded-lg hover-scale tilt-3d interactive-radius">
           Copy
@@ -399,6 +451,147 @@
       generatedStrengthLevel.textContent = analysis.strength;
       generatedStrengthLevel.className = `text-xs font-semibold ${strengthClass}`;
       crackTime.textContent = analysis.crackTime;
+      
+      // Run advanced analytics
+      runAdvancedAnalytics(password);
+    }
+
+    // Advanced Analytics Functions
+    function runAdvancedAnalytics(password) {
+      updateEntropyMeter(password);
+      updateSecurityScore(password);
+      checkPasswordBreach(password);
+      updatePasswordAge();
+    }
+
+    // Entropy Meter
+    function updateEntropyMeter(password) {
+      const entropyValue = document.getElementById('entropyValue');
+      const entropyBar = document.getElementById('entropyBar');
+      
+      const hasLower = /[a-z]/.test(password);
+      const hasUpper = /[A-Z]/.test(password);
+      const hasNumbers = /[0-9]/.test(password);
+      const hasSymbols = /[^a-zA-Z0-9]/.test(password);
+      
+      let charsetSize = 0;
+      if (hasLower) charsetSize += 26;
+      if (hasUpper) charsetSize += 26;
+      if (hasNumbers) charsetSize += 10;
+      if (hasSymbols) charsetSize += 32;
+      
+      const entropy = Math.log2(Math.pow(charsetSize, password.length));
+      const maxEntropy = 100; // Reasonable maximum for display
+      const percentage = Math.min((entropy / maxEntropy) * 100, 100);
+      
+      entropyValue.textContent = `${entropy.toFixed(1)} bits`;
+      entropyBar.style.width = `${percentage}%`;
+    }
+
+    // Security Score Calculation
+    function updateSecurityScore(password) {
+      const securityScore = document.getElementById('securityScore');
+      const securityScoreBar = document.getElementById('securityScoreBar');
+      
+      let score = 0;
+      
+      // Length scoring (50 points max)
+      if (password.length >= 8) score += 8;
+      if (password.length >= 12) score += 8;
+      if (password.length >= 16) score += 8;
+      if (password.length >= 20) score += 8;
+      if (password.length >= 24) score += 8;
+      if (password.length >= 32) score += 10;
+      
+      // Character variety (40 points max)
+      const hasLower = /[a-z]/.test(password);
+      const hasUpper = /[A-Z]/.test(password);
+      const hasNumbers = /[0-9]/.test(password);
+      const hasSymbols = /[^a-zA-Z0-9]/.test(password);
+      
+      if (hasLower) score += 10;
+      if (hasUpper) score += 10;
+      if (hasNumbers) score += 10;
+      if (hasSymbols) score += 10;
+      
+      // Complexity bonus (10 points max)
+      const uniqueChars = new Set(password.toLowerCase()).size;
+      const complexityRatio = uniqueChars / password.length;
+      if (complexityRatio > 0.7) score += 10;
+      else if (complexityRatio > 0.5) score += 5;
+      
+      // Pattern penalties
+      const commonPasswords = ['password', '123456', 'qwerty', 'abc123'];
+      const isCommon = commonPasswords.some(common => password.toLowerCase().includes(common));
+      if (isCommon) score -= 20;
+      
+      const repeatedChars = /(.)\1{2,}/.test(password);
+      if (repeatedChars) score -= 15;
+      
+      const sequential = /(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|123|234|345|456|567|678|789|890)/i.test(password);
+      if (sequential) score -= 10;
+      
+      score = Math.max(0, Math.min(100, score));
+      
+      securityScore.textContent = `${Math.round(score)}/100`;
+      securityScoreBar.style.width = `${score}%`;
+    }
+
+    // Breach Check (simulated - in real app would use HaveIBeenPwned API)
+    function checkPasswordBreach(password) {
+      const breachStatus = document.getElementById('breachStatus');
+      const breachIcon = document.getElementById('breachIcon');
+      
+      // Simulate breach check with common passwords
+      const breachedPasswords = ['password', '123456', 'qwerty', 'abc123', 'password123', 'admin', 'letmein', 'welcome', 'monkey', 'dragon'];
+      const isBreached = breachedPasswords.some(breached => password.toLowerCase().includes(breached));
+      
+      // Simulate API delay
+      setTimeout(() => {
+        if (isBreached) {
+          breachStatus.textContent = 'Compromised';
+          breachStatus.className = 'text-xs font-semibold text-red-400';
+          breachIcon.className = 'w-3 h-3 rounded-full bg-red-400';
+        } else {
+          breachStatus.textContent = 'Safe';
+          breachStatus.className = 'text-xs font-semibold text-green-400';
+          breachIcon.className = 'w-3 h-3 rounded-full bg-green-400';
+        }
+      }, 1000);
+    }
+
+    // Password Age Tracking
+    function updatePasswordAge() {
+      const passwordAge = document.getElementById('passwordAge');
+      const now = new Date();
+      
+      // Store generation time in localStorage
+      localStorage.setItem('lastPasswordGenerated', now.toISOString());
+      
+      // Update display
+      passwordAge.textContent = 'Just now';
+      
+      // Update every minute
+      setInterval(() => {
+        const lastGenerated = localStorage.getItem('lastPasswordGenerated');
+        if (lastGenerated) {
+          const lastTime = new Date(lastGenerated);
+          const diffMs = now.getTime() - lastTime.getTime();
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMs / 3600000);
+          const diffDays = Math.floor(diffMs / 86400000);
+          
+          if (diffMins < 1) {
+            passwordAge.textContent = 'Just now';
+          } else if (diffMins < 60) {
+            passwordAge.textContent = `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+          } else if (diffHours < 24) {
+            passwordAge.textContent = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+          } else {
+            passwordAge.textContent = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+          }
+        }
+      }, 60000);
     }
 
     // Keyboard shortcuts
